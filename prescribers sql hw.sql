@@ -77,10 +77,13 @@ WHERE prescription.npi IS NULL;
 
 
 
-
-
-
-
+SELECT prescriber.specialty_description, SUM(CASE WHEN drug.opioid_drug_flag = 'Y' THEN prescription.total_claim_count ELSE 0 END) AS opioid_claims,
+    SUM(prescription.total_claim_count) AS total_claims, ROUND(SUM(CASE WHEN drug.opioid_drug_flag = 'Y' 
+                 THEN prescription.total_claim_count ELSE 0 END) * 1.0 / SUM(prescription.total_claim_count) * 100, 2) AS opioid_percentage
+FROM prescriber INNER JOIN prescription ON prescriber.npi = prescription.npi
+                INNER JOIN drug ON prescription.drug_name = drug.drug_name
+GROUP BY prescriber.specialty_description
+ORDER BY opioid_percentage DESC;
 
 
 
@@ -167,5 +170,61 @@ ORDER BY population.population;
 
 
 
+
+SELECT prescription.drug_name, prescription.total_claim_count
+FROM prescription
+WHERE prescription.total_claim_count >= 3000
+ORDER BY prescription.total_claim_count DESC;
+
+
+
+SELECT prescription.drug_name, prescription.total_claim_count, drug.opioid_drug_flag
+FROM prescription
+INNER JOIN drug ON prescription.drug_name = drug.drug_name
+WHERE prescription.total_claim_count >= 3000
+ORDER BY prescription.total_claim_count DESC;
+
+
+
+SELECT prescription.drug_name, prescription.total_claim_count, drug.opioid_drug_flag, 
+       prescriber.nppes_provider_first_name, prescriber.nppes_provider_last_org_name
+FROM prescription INNER JOIN drug ON prescription.drug_name = drug.drug_name
+                  INNER JOIN prescriber ON prescription.npi = prescriber.npi
+WHERE prescription.total_claim_count >= 3000
+ORDER BY prescription.total_claim_count DESC;
+
+
+
+SELECT prescriber.npi, drug.drug_name
+FROM prescriber CROSS JOIN drug
+WHERE prescriber.specialty_description = 'Pain Management'
+  AND prescriber.nppes_provider_city = 'NASHVILLE'
+  AND drug.opioid_drug_flag = 'Y'
+ORDER BY prescriber.npi, drug.drug_name;
+
+
+
+SELECT prescriber.npi, drug.drug_name, prescription.total_claim_count
+FROM prescriber CROSS JOIN drug
+                LEFT JOIN prescription ON prescriber.npi = prescription.npi AND drug.drug_name = prescription.drug_name
+WHERE prescriber.specialty_description = 'Pain Management'
+  AND prescriber.nppes_provider_city = 'NASHVILLE'
+  AND drug.opioid_drug_flag = 'Y'
+ORDER BY prescriber.npi, drug.drug_name;
+
+
+
+
+SELECT
+    prescriber.npi,
+    drug.drug_name,
+    COALESCE(prescription.total_claim_count, 0) AS total_claim_count
+FROM prescriber CROSS JOIN drug
+                LEFT JOIN prescription ON prescriber.npi = prescription.npi
+                AND drug.drug_name = prescription.drug_name
+WHERE prescriber.specialty_description = 'Pain Management'
+  AND prescriber.nppes_provider_city = 'NASHVILLE'
+  AND drug.opioid_drug_flag = 'Y'
+ORDER BY prescriber.npi, drug.drug_name;
 
 
