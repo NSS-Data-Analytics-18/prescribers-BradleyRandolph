@@ -130,4 +130,42 @@ ORDER BY total_cost DESC;
 
 
 
+SELECT cbsa.cbsaname, fips_county.state
+FROM cbsa INNER JOIN fips_county ON cbsa.fipscounty = fips_county.fipscounty
+WHERE state = 'TN';
+
+
+
+SELECT COUNT(DISTINCT cbsa)
+FROM cbsa INNER JOIN fips_county ON cbsa.fipscounty = fips_county.fipscounty
+WHERE state = 'TN';
+
+
+
+
+
+SELECT cbsa.cbsaname, SUM(population.population)
+FROM cbsa LEFT JOIN population ON cbsa.fipscounty = population.fipscounty
+GROUP BY cbsa.cbsaname, population.population
+ORDER BY population.population DESC;
+
+
+
+
+SELECT cbsa.cbsaname, SUM(population.population) AS total_pop
+FROM cbsa LEFT JOIN population ON cbsa.fipscounty = population.fipscounty
+GROUP BY cbsa.cbsaname, population.population
+ORDER BY population.population;
+
+
+
+SELECT population.fipscounty, population.population, fips_county.county, cbsa.cbsa
+FROM population LEFT JOIN cbsa ON population.fipscounty = cbsa.fipscounty
+                LEFT JOIN fips_county ON population.fipscounty= fips_county.fipscounty
+WHERE cbsa.cbsa IS NULL 
+ORDER BY population.population;
+
+
+
+
 
